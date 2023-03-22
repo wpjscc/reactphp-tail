@@ -70,13 +70,13 @@ class Montior
        
     }
 
-    public function run($path, $names = [], $callback = null){
+    public function run($paths = [], $names = [], $callback = null){
 
         $this->callback = $callback ?: function(){};
 
         $finder = new Finder();
 
-        $finder->files()->in($path);
+        $finder->files()->in($paths);
 
         foreach ($names as $name) {
             $finder->name($name);
@@ -108,10 +108,13 @@ class Montior
             if ($buffer === false) {
                 $this->info("file error");
             } elseif ($buffer === null)  {
-                $this->info("file is reading");
-            } else  {
+                $this->info("file is reading:".$file);
+            } elseif ($buffer === true )  {
                 $this->info("read success");
                 echo "\n";
+            } else  {
+                $this->info("file mask is:$buffer". $file);
+                
             }
         });
     }
@@ -161,7 +164,7 @@ class Montior
                     // read until EOF
                     while (!feof($fp)) {
                         $callback = $this->callback;
-                        $callback(fgets($fp));
+                        $callback(fread($fp, 8192));
                     }
                     // save the new EOF to $pos
                     $pos = ftell($fp); // (remember: $pos is called by reference)
@@ -184,6 +187,9 @@ class Montior
                     // Return a failure
                     return false;
                     break;
+                default :
+                    return $evdetails['mask'];
+                    break;
             }
         }
     }
@@ -192,6 +198,7 @@ class Montior
     {
         foreach ($this->fileToFd as $file => $fd) {
             $this->removeTail($file);
+            $this->info('__destruct:'. $file);
         }
     }
     

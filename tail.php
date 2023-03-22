@@ -16,7 +16,7 @@ $callback = function ($buffer) {
 };
 
 $monitor->run(
-    getParam('--path'), 
+    (array) getParam('--path'), 
     (array) getParam('--name'), 
     $callback
 );
@@ -26,10 +26,11 @@ Loop::addPeriodicTimer(5, function () use ($monitor, $callback) {
     $memory = memory_get_usage() / 1024;
     $formatted = number_format($memory, 3).'K';
     $monitor->info("Current memory usage: {$formatted}");
+    $monitor->info("files: ". count($monitor->files));
 
     // var_dump($monitor->files);
     $monitor->run(
-        getParam('--path'), 
+        (array) getParam('--path'), 
         (array) getParam('--name'), 
         $callback
     );
