@@ -35,3 +35,27 @@ docker stop xxxx
 
 ```
 
+
+# ref
+
+https://www.php.net/manual/en/book.inotify.php
+
+# 其它
+
+打开文件有限制，设置系统参数
+
+```
+cat /proc/sys/fs/inotify/max_user_instances
+```
+
+vi /etc/sysctl.conf
+```
+fs.inotify.max_user_instances = 256
+```
+
+生效
+```
+sysctl -p
+```
+
+
