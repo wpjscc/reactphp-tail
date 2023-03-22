@@ -83,7 +83,7 @@ function handleWatchFile($fd, $file, &$watch_descriptor, &$pos, &$isRead){
 
                 // read until EOF
                 while (!feof($fp)) {
-                    $b = fread($fp, 8192);
+                    $b = fgets($fp);
                     callback($b);
                 }
                 // save the new EOF to $pos

@@ -161,7 +161,7 @@ class Montior
                     // read until EOF
                     while (!feof($fp)) {
                         $callback = $this->callback;
-                        $callback(fread($fp, 8192));
+                        $callback(fgets($fp));
                     }
                     // save the new EOF to $pos
                     $pos = ftell($fp); // (remember: $pos is called by reference)
