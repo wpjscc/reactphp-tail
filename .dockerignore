@@ -1,0 +1,14 @@
+.git
+.gitlab-ci.yml
+.gitignore
+.dockerignore
+.gitattributes
+.styleci.yml
+.php_cs.dist
+.editorconfig
+.env.example
+README.md
+composer.lock
+package-lock.json
+server.php
+logs

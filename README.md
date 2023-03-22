@@ -9,5 +9,5 @@
 
 
 ```
- php init.php --path=/root/Code/reactphp-tail/logs  --name='*test.log' --name='*test1.log'
+ php tail.php --path=/root/Code/reactphp-tail/logs  --name='*test.log' --name='*test1.log'
 ```
