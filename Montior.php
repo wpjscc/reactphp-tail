@@ -6,22 +6,30 @@ use Symfony\Component\Finder\Finder;
 
 class Montior
 {
-    public $files;
+    public $files = [];
 
     public $fileToFd = [];
 
     public $callback;
 
+    public $debug = false;
+
+
+    public function info($msg)
+    {
+        if ($this->debug) {
+            echo $msg.PHP_EOL;
+        }
+    }
+
     public function removeFile($file)
     {
-        $key = array_search($file, $this->files);
-
-        unset($key);
+        unset($this->files[$file]);
     }
     public function addFile($file)
     {
-        if (!in_array($file, $this->files)){
-            $this->files[] = $file;
+        if (!isset($this->files[$file])) {
+            $this->files[$file]['size'] = filesize($file);
         }
 
     }
@@ -50,12 +58,14 @@ class Montior
 
     function removeTail($file) {
         if ($this->existFileFd($file)) {
-            unset($this->fileToFd[$file]);
             $fd = $this->getFileFd($file);
             $watch_descriptor = $this->getFileFdWatchDescriptor($file);
+            unset($this->fileToFd[$file]);
+            $this->removeFile($file);
             Loop::removeReadStream($fd);
             inotify_rm_watch($fd, $watch_descriptor);
             fclose($fd);
+
         }
        
     }
@@ -76,19 +86,19 @@ class Montior
             $this->addFile($file->getRealPath());
         }
 
-        foreach ($this->files as $path) {
-            $this->tailFile($path);
+        foreach ($this->files as $path => $value) {
+            $this->tailFile($path, $value['size']);
         }
     }
 
 
 
-    public function tailFile($file){
+    public function tailFile($file, $lastpos = 0){
 
         if ($this->existFileFd($file)) {
             return;
         }
-        $lastpos = 0;
+
         $isRead = false;
     
         list($fd, $watch_descriptor) = $this->watchFile($file);
@@ -96,11 +106,12 @@ class Montior
         Loop::addReadStream($fd, function ($fd) use ($file, &$lastpos, &$isRead) {
             $buffer = $this->handleWatchFile($fd, $file, $lastpos, $isRead);
             if ($buffer === false) {
-                echo "file error\n";
+                $this->info("file error");
             } elseif ($buffer === null)  {
-                echo "file is reading\n";
+                $this->info("file is reading");
             } else  {
-                echo "$buffer\n";
+                $this->info("read success");
+                echo "\n";
             }
         });
     }
@@ -115,7 +126,7 @@ class Montior
 
 
     public function handleWatchFile($fd, $file, &$pos, &$isRead){
-    
+            
         $events = inotify_read($fd);
     
         // exit();
@@ -132,10 +143,14 @@ class Montior
                     if ($isRead) {
                         return ;
                     }
+
+                    if(!$pos) $pos = filesize($file);
+                    
                     // open the file
                     $fp = fopen($file,'r');
                     if (!$fp) {
                         $this->removeTail($file);
+                        fclose($fp);
                         return false;
                     };
                     $isRead = true;
@@ -145,7 +160,8 @@ class Montior
     
                     // read until EOF
                     while (!feof($fp)) {
-                        $this->callback(fread($fp, 8192));
+                        $callback = $this->callback;
+                        $callback(fread($fp, 8192));
                     }
                     // save the new EOF to $pos
                     $pos = ftell($fp); // (remember: $pos is called by reference)
@@ -155,7 +171,7 @@ class Montior
                     $isRead = false;
     
                     // return the new data and leave the function
-                    return $buf;
+                    return true;
                     // be a nice guy and program good code ;-)
                     break;
     
